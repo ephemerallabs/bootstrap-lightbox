@@ -85,7 +85,7 @@
 
 				transition ?
 					that.$element.one($.support.transition.end, function () { that.centerImage(); that.$element.focus().trigger('shown'); }) :
-					(function(){ that.centerImage(); that.$element.focus().trigger('shown'); })()
+					(function(){ that.centerImage(); that.$element.trigger('shown'); })()
 
 			});
 		},
@@ -223,7 +223,7 @@
 			{
 				
 				resizedOffs = 10;
-				$img = that.$element.find('.lightbox-content').find('img:first');
+				$img = that.$element.find('.lightbox-content').find('img:visible');
 				// Save original filesize
 				if(!$img.data('osizew')) $img.data('osizew', $img.width());
 				if(!$img.data('osizeh')) $img.data('osizeh', $img.height());
@@ -233,14 +233,38 @@
 				
 				// Resize for window dimension < than image
 				// Reset previous
-				$img.css('max-width', 'none');
-				$img.css('max-height', 'none');
+				$img.attr('width', osizew);
+				$img.attr('height', osizeh);
 				
 
 				var sOffs = 40; // STYLE ?
 				if(that.$element.find('.lightbox-header').length > 0) sOffs += 10;
-				$img.css('max-width', $(window).width() - sOffs);
-				$img.css('max-height', $(window).height() - sOffs);
+
+                                var mwidth = $(window).width() - sOffs;
+                                var mheight = $(window).height() - sOffs;
+                                var rw = osizew > mwidth;
+                                var rh = osizeh > mheight;
+                                var dw = osizew - mwidth;
+                                var dh = osizeh - mheight;
+
+                                if (rw && rh) {
+                                    if (dw > dh) {
+                                        $img.attr('width', mwidth);
+                                        $img.attr('height', '');
+                                    } else if (dh > dw) {
+                                        $img.attr('height', mheight);
+                                        $img.attr('width', '');
+                                    } else {
+                                        $img.attr('height', mheight);
+                                        $img.attr('width', mwidth);
+                                    }
+                                } else if (rw) {
+                                    $img.attr('width', mwidth);
+                                    $img.attr('height', '');
+                                } else if (rh) {
+                                    $img.attr('height', mheight);
+                                    $img.attr('width', '');
+                                }
 				
 				that.w = $img.width();
 				that.h = $img.height();
@@ -248,7 +272,7 @@
 
 			that.$element.css({
 				"position": "fixed",
-				"left": ( $(window).width()  / 2 ) - ( that.w / 2 ),
+				"left": ( $(window).width()  / 2 ) - ( that.w / 2 ) - 10,
 				"top":  ( $(window).height() / 2 ) - ( that.h / 2 ) - resizedOffs
 			});
 			that.enforceFocus();
